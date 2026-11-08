@@ -1,0 +1,19 @@
+{
+  "orders": 314682,
+  "lines": 1651965,
+  "aov": 560.1535055233251,
+  "vel_late_peak_orders": 2211,
+  "sho_late_orders": 12074,
+  "sho_over3_pct": 27.081466614099853,
+  "an_lost_gmv": 280606.0,
+  "an_dairy_fill": 63.4,
+  "net_dairy_fill": 97.77272727272727,
+  "reorder_on_time": 51.9,
+  "reorder_late": 40.0,
+  "vel_rider_hours_now": 542.8571428571429,
+  "vel_rider_hours_needed": 530.0,
+  "vel_peak_gap": 17,
+  "reorder_drop_pts": 11.9,
+  "vel_repeat_gmv_at_risk": 147381.42868473651,
+  "sho_repeat_gmv_at_risk": 804831.9176569465
+}
