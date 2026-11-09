@@ -8,7 +8,7 @@ Our 10-minute promise breaks in three places, for three different reasons. Each 
 
 | Store | Symptom | Root cause | Fix | Cost | Monthly upside |
 |---|---|---|---|---|---|
-| Velachery | Late orders rise 9x at 7 to 9 PM (0.9% to 8.3% over 15 min) | Rider roster is flat at 27 riders every hour | Reshape the roster to follow demand | **Saves 13 rider-hours/day** | ~Rs 1.25 L repeat GMV |
+| Velachery | Late orders rise 9x at 7 to 9 PM (0.9% to 8.3% over 15 min) | Rider roster is flat at 27 riders every hour | Reshape the roster to follow demand | **No extra riders**: cost-neutral at a cautious 2.2 orders/rider-hour; **~54 fewer rider-hours/day (~Rs 7.3k/day)** at the network's own 2.5 | ~Rs 1.25 L repeat GMV + up to ~Rs 2.2 L rider cost |
 | Sholinganallur | 43% of orders over 15 min, all day; rating 3.41 vs 4.58 at the best store | 27% of orders are over 3 km away; 91% of those arrive late | Open a second store in the outer catchment (more riders won't help) | Capex | ~Rs 5.6 L repeat GMV |
 | Anna Nagar | Morning dairy/bread fill rate 63% vs 98% at other stores | Dairy inbound lands after the 7 to 9 AM rush | Move the dairy vendor slot to 05:00 | ~Zero | ~Rs 2.2 L direct GMV |
 
@@ -22,6 +22,16 @@ Our 10-minute promise breaks in three places, for three different reasons. Each 
 4. **Joined demand to the rider roster** (queries 04 and 05). Late orders stay low until load passes ~2.5 orders per rider-hour, then jump to 21% above 3.0. Velachery runs 27 riders at all hours. It needs ~45 at 8 PM and only ~9 at 1 AM.
 5. **Distance tail** (query 07). Sholinganallur's 90th-percentile distance is 4.4 km, vs 1.8 to 2.6 km elsewhere. Longer rides also keep riders out longer, so rider wait rises too. Adding riders treats the symptom; the catchment is the cause.
 6. **Fill rate by store x category x daypart** (query 06). One cell stood out: Anna Nagar Dairy & Bread, 06:00 to 11:00, at 63.9%. Every other cell in the network was above 95.9%.
+
+## Store economics (query 13, sheet `Store_Economics`)
+
+- Contribution averages **~Rs 25/order (~4.5% of AOV)**. Break-even is **~780 to 900 orders/day** per store. The cost assumptions are listed in the query and the sheet.
+- **Velachery has the 2nd-highest volume (1,185 orders/day) but is loss-making (−Rs 1.6k/day).** Its flat roster costs ~Rs 8 more per order than the network: it runs 2.2 orders per rider-hour vs ~2.5 everywhere else. Goal Seek shows it breaks even after cutting just **~12 rider-hours/day**. So the roster fix is a profit fix too, not only an SLA fix.
+- **Tambaram (725/day) and Kattankulathur (587/day) are below break-even on volume.** Their costs per order are normal, so the fix is demand (catchment marketing, AOV), not cost-cutting. This is also a caution for new-store planning: a new store must reach ~800 orders/day.
+
+## Stock-out windows (query 12, gaps-and-islands)
+
+A category-hour is flagged when ≥20% of its order lines are out of stock; the network baseline is ~2.5%. Consecutive flagged hours are grouped into windows. Across 12 stores × 9 categories × 28 days, exactly one recurring window appears: **Anna Nagar Dairy & Bread, every day (28 of 28), 06:00 to 10:59, ~4.9 hours, Rs 2.79 L lost.** That confirms the problem is the inbound slot, not random stock-outs.
 
 ## Also seen
 

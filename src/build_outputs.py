@@ -160,6 +160,7 @@ lines = [
     ("Breach_Heatmap: % of orders > 15 min, store x hour (dry days).", False),
     ("Velachery_Roster: what-if roster model. Change the target orders per rider-hour.", False),
     ("Morning_Fill: line fill rate 06:00-10:59 by store x category.", False),
+    ("Store_Economics: contribution, break-even and profit per store. Goal Seek-ready, all formulas.", False),
     ("Impact: rupee sizing of each fix, all formulas, assumptions in yellow.", False),
     ("Orders_Sample: 5,000 raw orders for pivots / SUMIFS / XLOOKUP practice.", False),
 ]
@@ -311,6 +312,82 @@ for r in sample.itertuples(index=False):
     ws.append(list(r))
 ws.freeze_panes = "A2"; ws.auto_filter.ref = ws.dimensions
 widths(ws, [11, 15, 11, 8, 8, 9, 9, 9, 9, 9, 8, 9, 9, 9, 13, 7])
+
+# Store economics: formula-driven, Goal Seek / Data Table ready
+econ = q("""SELECT st.store_name, st.sq_ft,
+                   COUNT(DISTINCT o.order_id) / 28.0                       AS orders_day,
+                   SUM(i.price * i.qty) / 28.0                             AS gmv_day,
+                   SUM((i.price - k.unit_cost) * i.qty) / 28.0             AS margin_day,
+                   (SELECT SUM(riders_planned) FROM rider_shifts r WHERE r.store_id = st.store_id) / 28.0 AS rider_hours_day
+            FROM orders o JOIN order_items i USING(order_id) JOIN skus k USING(sku_id)
+            JOIN stores st ON st.store_id = o.store_id
+            WHERE o.status = 'delivered' AND i.fulfilled = 1
+            GROUP BY st.store_id ORDER BY st.store_id""")
+ws = wb.create_sheet("Store_Economics", index=wb.sheetnames.index("Impact"))
+ws["A1"] = "Store economics: contribution, break-even and profit per store per day (Rs). Yellow = inputs."
+ws["A1"].font = Font(bold=True, size=13)
+inputs = [("Rider cost per rider-hour (payout + incentives)", 135), ("Pick + pack cost per order", 15),
+          ("Payment fees (% of GMV)", 0.02), ("Discounts (% of GMV)", 0.04), ("Wastage / shrinkage (% of GMV)", 0.015),
+          ("Ad income + supplier funding (% of GMV)", 0.03), ("Rent per sq ft per month", 75),
+          ("Staff + power per store per day", 12000)]
+for k, (label, val) in enumerate(inputs, 3):  # rows 3..10
+    ws.cell(row=k, column=1, value=label)
+    c = ws.cell(row=k, column=2, value=val); c.fill = INPUT; c.border = BOX
+    if isinstance(val, float) and val < 1:
+        c.number_format = "0.0%"
+cols = ["Store", "Orders/day", "GMV/day", "Product margin/day", "Rider-hours/day", "Sq ft", "AOV",
+        "Contribution/day", "Contribution/order", "Contribution % AOV", "Fixed cost/day",
+        "Break-even orders/day", "Profit/day"]
+header(ws, 12, cols)
+first = 13
+for j, r in enumerate(econ.itertuples(index=False)):
+    row = first + j
+    vals = [r.store_name, round(r.orders_day, 1), round(r.gmv_day, 0), round(r.margin_day, 0),
+            round(r.rider_hours_day, 1), int(r.sq_ft)]
+    for cidx, v in enumerate(vals, 1):
+        ws.cell(row=row, column=cidx, value=v)
+    f = {
+        7: "=C{r}/B{r}",
+        8: "=D{r}+C{r}*($B$8-$B$5-$B$6-$B$7)-B{r}*$B$4-E{r}*$B$3",
+        9: "=H{r}/B{r}",
+        10: "=I{r}/G{r}",
+        11: "=F{r}*$B$9*12/365+$B$10",
+        12: "=K{r}/I{r}",
+        13: "=H{r}-K{r}",
+    }
+    for cidx, formula in f.items():
+        ws.cell(row=row, column=cidx, value=formula.format(r=row))
+    for cidx in range(1, 14):
+        cell = ws.cell(row=row, column=cidx); cell.border = BOX
+        if cidx in (3, 4, 7, 8, 11, 12, 13):
+            cell.number_format = "#,##0"
+        elif cidx == 9:
+            cell.number_format = "0.0"
+        elif cidx == 10:
+            cell.number_format = "0.0%"
+last = first + len(econ) - 1
+tot = last + 1
+ws.cell(row=tot, column=1, value="Network").font = Font(bold=True)
+for cidx, col in ((2, "B"), (3, "C"), (4, "D"), (5, "E"), (8, "H"), (11, "K"), (13, "M")):
+    c = ws.cell(row=tot, column=cidx, value="=SUM(%s%d:%s%d)" % (col, first, col, last))
+    c.font = Font(bold=True); c.number_format = "#,##0"
+ws.cell(row=tot, column=9, value="=H%d/B%d" % (tot, tot)).number_format = "0.0"
+ws.conditional_formatting.add("M%d:M%d" % (first, last),
+                              CellIsRule(operator="lessThan", formula=["0"], fill=PatternFill("solid", fgColor="F8B4B4")))
+ws.conditional_formatting.add("M%d:M%d" % (first, last),
+                              CellIsRule(operator="greaterThanOrEqual", formula=["0"], fill=PatternFill("solid", fgColor="BBF7D0")))
+notes = [
+    "How to use:",
+    "Goal Seek (Data > What-If Analysis > Goal Seek): set Velachery's Profit/day to 0 by changing its Rider-hours/day. "
+    "That gives the roster size at which it breaks even.",
+    "Goal Seek: set Kattankulathur's Profit/day to 0 by changing its Orders/day. That gives the volume it needs to break even.",
+    "Change any yellow input (e.g. rider cost) and every store's contribution, break-even and profit recalculates.",
+    "Assumptions are calibrated so contribution is ~4-5% of AOV, the low-single-digit range seen in public q-commerce reporting.",
+]
+for k, t in enumerate(notes, tot + 2):
+    ws.cell(row=k, column=1, value=t).font = Font(bold=(k == tot + 2))
+widths(ws, [44, 11, 11, 13, 12, 8, 8, 13, 12, 12, 12, 13, 11])
+ws.freeze_panes = "B13"
 
 wb.save(os.path.join(OUT, "DarkStore_Ops_Analysis.xlsx"))
 print(json.dumps(facts, indent=2))

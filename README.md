@@ -2,7 +2,7 @@
 
 Root-cause analysis of delivery-time breaches and stockouts across a 12-store quick-commerce network in Chennai. It uses SQL, Excel and Python on 314K orders and 1.65M order lines.
 
-**The findings are in [MEMO.md](MEMO.md):** three fixes worth about Rs 9 lakh a month, one of them cost-negative.
+**The findings are in [MEMO.md](MEMO.md):** three fixes worth about Rs 9 lakh a month, plus per-store profit and break-even. The biggest-volume problem store is actually loss-making because of its roster.
 
 ![Breach heatmap](results/charts/01_breach_heatmap.png)
 
@@ -11,9 +11,9 @@ Root-cause analysis of delivery-time breaches and stockouts across a 12-store qu
 | Path | What |
 |---|---|
 | `MEMO.md` | One-page ops memo: findings, root causes, fixes, impact, caveats |
-| `sql/analysis.sql` | 11 analysis queries (CTEs, window functions, joins to the rider roster) |
+| `sql/analysis.sql` | 13 analysis queries (CTEs, window functions, gaps-and-islands, joins to the rider roster, store unit economics) |
 | `results/sql_results.md` | Output of every query |
-| `results/DarkStore_Ops_Analysis.xlsx` | Scorecard, heatmap, **what-if rider roster model**, fill-rate matrix, impact sizing (live formulas), 5,000-row raw sample |
+| `results/DarkStore_Ops_Analysis.xlsx` | Scorecard, heatmap, **what-if rider roster model**, fill-rate matrix, **store economics with break-even (Goal Seek-ready)**, impact sizing (live formulas), 5,000-row raw sample |
 | `results/charts/` | Heatmap, roster gap, distance tail, retention |
 | `src/generate_data.py` | Simulator that generates the dataset |
 

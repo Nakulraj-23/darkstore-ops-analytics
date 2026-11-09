@@ -199,3 +199,30 @@ _Q: Size each problem in rupees per month (28 days in data)._
 | All other stockouts (network baseline) | 41.96 |
 | Velachery 18:00-22:59 GMV delivered > 15 min (exposed to the reorder drop in query 09) | 12.97 |
 | Sholinganallur GMV delivered > 15 min (exposed to the reorder drop) | 69.26 |
+
+## 12_stockout_windows
+
+_Q: Gaps-and-islands. When is a whole category unavailable for 2+ hours in a row, and how much does it cost? An hour is flagged when >= 20% of a store-category's order lines are out of stock (network baseline ~2.5%). Consecutive flagged hours share the same (hour_seq - ROW_NUMBER()) value, which labels each island._
+
+| store_name | category | windows | avg_hours | earliest_start | latest_end | lost_gmv_k |
+|---|---|---|---|---|---|---|
+| Anna Nagar | Dairy & Bread | 28 | 4.9 | 06:00 | 10:59 | 279.0 |
+
+## 13_store_contribution
+
+_Q: Which stores make money? Contribution per order, fixed cost, break-even orders/day and daily profit. Costs are assumptions in the params CTE, calibrated so contribution is ~4-5% of AOV (low single digits, as in public q-commerce disclosures)._
+
+| store_name | orders_day | aov | contrib_per_order | contrib_pct_aov | fixed_cost_day | breakeven_orders_day | store_profit_day | profit_rank |
+|---|---|---|---|---|---|---|---|---|
+| T Nagar | 1238.0 | 562.0 | 25.5 | 4.5 | 22849.0 | 895.0 | 8756.0 | 1 |
+| Anna Nagar | 1131.0 | 552.0 | 25.1 | 4.5 | 21863.0 | 871.0 | 6519.0 | 2 |
+| Adyar | 1071.0 | 559.0 | 24.6 | 4.4 | 20877.0 | 848.0 | 5483.0 | 3 |
+| Sholinganallur | 996.0 | 561.0 | 25.7 | 4.6 | 21370.0 | 831.0 | 4261.0 | 4 |
+| Mylapore | 921.0 | 560.0 | 25.1 | 4.5 | 19890.0 | 793.0 | 3209.0 | 5 |
+| Guindy | 867.0 | 562.0 | 25.9 | 4.6 | 20137.0 | 779.0 | 2276.0 | 6 |
+| Perungudi | 901.0 | 562.0 | 25.3 | 4.5 | 20630.0 | 816.0 | 2154.0 | 7 |
+| Kilpauk | 813.0 | 558.0 | 24.7 | 4.4 | 19644.0 | 795.0 | 431.0 | 8 |
+| Porur | 800.0 | 561.0 | 25.8 | 4.6 | 20384.0 | 789.0 | 296.0 | 9 |
+| Velachery | 1185.0 | 561.0 | 17.5 | 3.1 | 22356.0 | 1279.0 | -1651.0 | 10 |
+| Tambaram | 725.0 | 565.0 | 25.5 | 4.5 | 20630.0 | 811.0 | -2177.0 | 11 |
+| Kattankulathur | 587.0 | 561.0 | 25.0 | 4.5 | 19397.0 | 776.0 | -4723.0 | 12 |
